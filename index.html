@@ -83,6 +83,9 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .arrow .a{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%;background:rgba(243,197,109,.95);display:grid;place-items:center;box-shadow:0 0 22px rgba(243,197,109,.5)}
 .arrow .a svg{width:24px;height:24px;color:#1b1407}
 .arrow .l{position:absolute;left:-90px;width:180px;top:28px;text-align:center;font-size:12px;font-weight:700;text-shadow:0 1px 4px #000}
+.calib{position:absolute;left:12px;right:12px;bottom:calc(var(--tab-h) + var(--sab) + 72px);z-index:22;max-width:460px;margin:0 auto;padding:14px;border-radius:18px;background:rgba(12,17,33,.94);border:1px solid rgba(243,197,109,.45);display:none;flex-direction:column;gap:10px}
+.calib.on{display:flex}
+.calib p{margin:0;font-size:14px}
 .toast{position:absolute;left:50%;bottom:calc(var(--tab-h) + var(--sab) + 76px);transform:translateX(-50%);z-index:30;padding:9px 14px;border-radius:12px;background:var(--glass);border:1px solid var(--hair);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:13px;max-width:calc(100% - 32px);text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
 .toast.on{opacity:1}
 
@@ -239,6 +242,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}
       <button class="fab" id="tSettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     </div>
     <div class="toast" id="toast"></div>
+    <div class="calib" id="calib"><p id="calibTxt"></p><div class="row"><button class="btn primary wide" id="calibOk">It’s in the circle</button><button class="btn" id="calibNo">Cancel</button></div></div>
 
     <div class="start" id="start">
       <div class="card">
@@ -276,8 +280,8 @@ input[type=range]{width:100%;accent-color:var(--gold)}
             <button class="tog" data-k="night">Red night vision<i></i></button>
           </div>
         </div>
-        <div class="field"><label for="fovIn">Camera zoom match · <span class="mono" id="fovV"></span></label><input type="range" id="fovIn" min="40" max="85" step="1"><span class="sub">If labels drift away from stars as you turn, adjust until they stay put.</span></div>
-        <div class="field"><label for="cmpIn">Compass fine-tune · <span class="mono" id="cmpV"></span></label><input type="range" id="cmpIn" min="-30" max="30" step="0.5"><span class="sub">If every label sits left or right of its star, slide until they line up. Moving the phone in a figure-8 also helps the compass settle.</span></div>
+        <div class="field"><label for="fovIn">Camera field of view · <span class="mono" id="fovV"></span></label><input type="range" id="fovIn" min="50" max="85" step="0.5"><span class="sub">Most phone main cameras are 65–70°. If stars near the edges of the screen sit further out than their labels, lower this; if they sit further in, raise it.</span></div>
+        <div class="field"><label for="cmpIn">Compass fine-tune · <span class="mono" id="cmpV"></span></label><input type="range" id="cmpIn" min="-60" max="60" step="0.5"><span class="sub">The quickest fix is automatic: in camera view, tap the Moon, a planet or a bright star and choose “Align compass”. Moving the phone in a figure-8 also helps the compass settle. Keep the phone away from magnets, metal cases and car dashboards.</span></div>
         <div class="field"><span class="lbl">Charts &amp; tracing game</span>
           <div class="toggles"><button class="tog" data-k="localView">As seen from here<i></i></button></div>
           <span class="sub">Turns constellation drawings to match how they look from your location. Off shows north at the top, like a star atlas.</span></div>
@@ -952,6 +956,7 @@ const store = {
   set(k, v) { try { localStorage.setItem('starlens.' + k, JSON.stringify(v)); } catch (e) { } }
 };
 const S = Object.assign({ lines: true, names: true, conNames: true, milky: true, planets: true, night: false, fov: 64, cmp: 0, localView: true, sound: true, guide: true }, store.get('settings', {}));
+if (!S.v2) { S.fov = 67; S.v2 = true; }
 const saveS = () => store.set('settings', S);
 
 const CON_MEANING = { And: 'Chained Princess', Ant: 'Air Pump', Aps: 'Bird of Paradise', Aqr: 'Water Bearer', Aql: 'Eagle', Ara: 'Altar', Ari: 'Ram', Aur: 'Charioteer', Boo: 'Herdsman', Cae: 'Chisel', Cam: 'Giraffe', Cnc: 'Crab', CVn: 'Hunting Dogs', CMa: 'Great Dog', CMi: 'Little Dog', Cap: 'Sea Goat', Car: 'Keel', Cas: 'Queen', Cen: 'Centaur', Cep: 'King', Cet: 'Sea Monster', Cha: 'Chameleon', Cir: 'Drawing Compass', Col: 'Dove', Com: 'Berenice’s Hair', CrA: 'Southern Crown', CrB: 'Northern Crown', Crv: 'Crow', Crt: 'Cup', Cru: 'Southern Cross', Cyg: 'Swan', Del: 'Dolphin', Dor: 'Swordfish', Dra: 'Dragon', Equ: 'Little Horse', Eri: 'River', For: 'Furnace', Gem: 'Twins', Gru: 'Crane', Her: 'Hero', Hor: 'Clock', Hya: 'Water Snake', Hyi: 'Little Water Snake', Ind: 'Indian', Lac: 'Lizard', Leo: 'Lion', LMi: 'Little Lion', Lep: 'Hare', Lib: 'Scales', Lup: 'Wolf', Lyn: 'Lynx', Lyr: 'Lyre', Men: 'Table Mountain', Mic: 'Microscope', Mon: 'Unicorn', Mus: 'Fly', Nor: 'Carpenter’s Square', Oct: 'Octant', Oph: 'Serpent Bearer', Ori: 'Hunter', Pav: 'Peacock', Peg: 'Winged Horse', Per: 'Hero', Phe: 'Phoenix', Pic: 'Painter’s Easel', Psc: 'Fishes', PsA: 'Southern Fish', Pup: 'Stern', Pyx: 'Ship’s Compass', Ret: 'Net', Sge: 'Arrow', Sgr: 'Archer', Sco: 'Scorpion', Scl: 'Sculptor', Sct: 'Shield', Ser: 'Serpent', Sex: 'Sextant', Tau: 'Bull', Tel: 'Telescope', Tri: 'Triangle', TrA: 'Southern Triangle', Tuc: 'Toucan', UMa: 'Great Bear', UMi: 'Little Bear', Vel: 'Sails', Vir: 'Maiden', Vol: 'Flying Fish', Vul: 'Little Fox' };
@@ -1139,13 +1144,22 @@ let mode = 'touch';
 const view = { az: OBS.lat < 0 ? 180 : 0, alt: 32, fov: 80 };
 let P = null, hits = [], sel = null, tween = null;
 const PX = new Float32Array(NS), PY = new Float32Array(NS), PZ = new Float32Array(NS), PU = new Float32Array(NS), PV = new Uint8Array(NS);
-let liveSession = 0, qT = null, qC = null, lastOri = 0, iosOff = null, oriKind = '', camLive = false, stream = null, oriEvt = null;
+let iosGood = false, liveSession = 0, qT = null, qC = null, lastOri = 0, iosOff = null, oriKind = '', camLive = false, stream = null, oriEvt = null;
 const mwSprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(190,205,255,1)'); gr.addColorStop(.5, 'rgba(170,185,240,.35)'); gr.addColorStop(1, 'rgba(160,175,230,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return c; })();
 
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   W = cv.clientWidth; H = cv.clientHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); dirty = true;
 }
+// Focal length in screen pixels for the camera view. S.fov is the camera's field of view along the
+// long side of its picture; the video is scaled to cover the screen, so match that scale exactly.
+function arFocal() {
+  const half = Math.tan(S.fov * D2R / 2), vw = video.videoWidth, vh = video.videoHeight;
+  if (camLive && vw && vh) return (Math.max(vw, vh) / 2) / half * Math.max(W / vw, H / vh);
+  return (Math.max(W, H) / 2) / half;
+}
+// Atmospheric refraction (Saemundsson): how much higher a star appears than its true altitude, in degrees
+const refraction = h => h < -1 ? 0 : 1.02 / Math.tan((h + 10.3 / (h + 5.11)) * D2R) / 60;
 function camXYZ(e) { return [dot3(e, P.r), dot3(e, P.u), dot3(e, P.f)]; }
 function projCam(x, y, z) {
   let k;
@@ -1161,7 +1175,7 @@ function render() {
   const ar = mode === 'ar' && qC;
   const B = ar ? basisFromQ(qC) : basisAzAlt(view.az, view.alt);
   const fov = (ar ? S.fov : view.fov) * D2R;
-  const F = ar ? (H / 2) / Math.tan(fov / 2) : (H / 2) / (2 * Math.tan(fov / 4));
+  const F = ar ? arFocal() : (H / 2) / (2 * Math.tan(fov / 4));
   P = { r: B.r, u: B.u, f: B.f, F, cx: W / 2, cy: H / 2, persp: !!ar };
   const camOn = ar && camLive;
   const fovDeg = fov * R2D;
@@ -1185,6 +1199,7 @@ function render() {
     ctx.globalCompositeOperation = 'lighter';
     const base = sunAlt > -6 ? 0.012 : 0.04;
     for (let i = 0; i < MWN; i++) {
+      if (M[6] * MWX[i] + M[7] * MWY[i] + M[8] * MWZ[i] < 0) continue;
       const x = Cx[0] * MWX[i] + Cx[1] * MWY[i] + Cx[2] * MWZ[i], y = Cy[0] * MWX[i] + Cy[1] * MWY[i] + Cy[2] * MWZ[i], z = Cz[0] * MWX[i] + Cz[1] * MWY[i] + Cz[2] * MWZ[i];
       let k; if (persp) { if (z <= 0.05) continue; k = Fp / z; } else { if (1 + z < 0.05) continue; k = 2 * Fp / (1 + z); }
       const sx = cx + x * k, sy = cy - y * k, s = Math.max(4, k * 0.055);
@@ -1197,10 +1212,20 @@ function render() {
   const U = [M[6], M[7], M[8]];
   for (let i = 0; i < NS; i++) {
     const vx = SX[i], vy = SY[i], vz = SZ[i];
-    const z = Cz[0] * vx + Cz[1] * vy + Cz[2] * vz;
-    PZ[i] = z; PU[i] = U[0] * vx + U[1] * vy + U[2] * vz;
+    const pu = U[0] * vx + U[1] * vy + U[2] * vz;
+    // Stars below the horizon are hidden by the Earth: never draw them
+    if (pu < -0.012) { PV[i] = 0; PU[i] = pu; PZ[i] = -1; continue; }
+    let x = Cx[0] * vx + Cx[1] * vy + Cx[2] * vz, y = Cy[0] * vx + Cy[1] * vy + Cy[2] * vz, z = Cz[0] * vx + Cz[1] * vy + Cz[2] * vz;
+    if (pu < 0.2) {
+      // near the horizon the air lifts stars by up to half a degree
+      const h = Math.asin(pu) * R2D, h2 = h + refraction(h);
+      if (h2 <= 0) { PV[i] = 0; PU[i] = -1e-3; PZ[i] = -1; continue; }
+      const e0 = M[0] * vx + M[1] * vy + M[2] * vz, e1 = M[3] * vx + M[4] * vy + M[5] * vz, sc = Math.cos(h2 * D2R) / Math.sqrt(1 - pu * pu), e = [e0 * sc, e1 * sc, Math.sin(h2 * D2R)];
+      x = dot3(e, r); y = dot3(e, u); z = dot3(e, f); PU[i] = e[2];
+    } else PU[i] = pu;
+    PZ[i] = z;
     let k; if (persp) { if (z <= 0.02) { PV[i] = 0; continue; } k = Fp / z; } else { if (1 + z < 0.03) { PV[i] = 0; continue; } k = 2 * Fp / (1 + z); }
-    PX[i] = cx + (Cx[0] * vx + Cx[1] * vy + Cx[2] * vz) * k; PY[i] = cy - (Cy[0] * vx + Cy[1] * vy + Cy[2] * vz) * k; PV[i] = 1;
+    PX[i] = cx + x * k; PY[i] = cy - y * k; PV[i] = 1;
   }
   const selCon = sel && sel.type === 'con' ? sel.id : (sel && sel.type === 'star' ? starCon(sel.id) : null);
   // constellation lines
@@ -1211,7 +1236,7 @@ function render() {
       ctx.lineWidth = hi ? 2 : (camOn ? 1.4 : 1.1);
       ctx.beginPath();
       for (const [a, b] of CG[cid].edges) {
-        if (!PV[a] || !PV[b]) continue;
+        if (!PV[a] || !PV[b] || PU[a] <= 0 || PU[b] <= 0) continue;
         const ax = PX[a], ay = PY[a], bx = PX[b], by = PY[b];
         if ((ax < 0 && bx < 0) || (ax > W && bx > W) || (ay < 0 && by < 0) || (ay > H && by > H)) continue;
         const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy); if (L < 4 || L > 3 * (W + H)) continue;
@@ -1226,7 +1251,7 @@ function render() {
   const zoom = Math.sqrt(clamp(70 / fovDeg, 0.8, 4));
   for (let i = 0; i < NS; i++) {
     const m = SMAG[i]; if (m > limit) break;
-    if (!PV[i]) continue;
+    if (!PV[i] || PU[i] <= 0) continue;
     const x = PX[i], y = PY[i]; if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
     const rad = clamp(3.5 - 0.6 * m, 0.6, 5.2) * zoom * (camOn ? 1.15 : 1);
     if (m < 2.2) {
@@ -1245,6 +1270,7 @@ function render() {
   const bodyPos = {};
   if (S.planets) {
     for (const b of BODIES) {
+      if (b.alt < 0) continue;
       const c = camXYZ(b.v), p = projCam(c[0], c[1], c[2]); if (!onScreen(p, 40)) continue;
       bodyPos[b.id] = p;
       if (b.id === 'moon') drawMoon(p, b);
@@ -1262,7 +1288,7 @@ function render() {
     }
   }
   // ground
-  drawGround(camOn ? 0.22 : (ar ? 0.82 : 0.9));
+  drawGround(camOn ? 0.45 : 1);
   // horizon + compass
   drawHorizon(camOn);
   // labels
@@ -1288,7 +1314,7 @@ function render() {
     for (const cid in CONS) {
       if (CONS[cid].r > maxRank && cid !== selCon) continue;
       const p = projENU(toENU(CG[cid].lv)); if (!onScreen(p)) continue;
-      const above = toENU(CG[cid].lv)[2] > 0;
+      const above = toENU(CG[cid].lv)[2] > 0; if (!above) continue;
       ctx.font = 'italic 500 15px Fraunces, Georgia, serif'; const t = CONS[cid].n; const w = ctx.measureText(t).width;
       if (label(t, p[0] - w / 2, p[1], ctx.font, cid === selCon ? '#f3c56d' : '#a9c6ff', above || camOn ? (cid === selCon ? 1 : 0.72) : 0.3))
         hits.push({ x: p[0], y: p[1] - 5, type: 'con', id: cid, w: 6 });
@@ -1301,7 +1327,7 @@ function render() {
       if (!PV[i] || !SNAME[i]) continue;
       const x = PX[i], y = PY[i]; if (x < 0 || x > W || y < 0 || y > H) continue;
       const above = PU[i] > 0;
-      if (!above && !ar) continue;
+      if (!above) continue;
       label(SNAME[i], x + 7, y + 4, '600 12px Manrope, sans-serif', '#e6ecfa', above ? (SMAG[i] < 1.5 ? 0.95 : 0.75) : 0.4);
     }
   }
@@ -1411,11 +1437,15 @@ function updatePointing() {
   const f = P.f, aa = altAzOf(f);
   const vJ = fromENU(f), con = nearestCon(vJ, 22);
   const k = $('#pointK'), v = $('#pointV'), c = $('#pointC');
+  if (mode === 'ar' && aa.alt < -3) {
+    k.textContent = 'Below the horizon'; v.textContent = 'Point higher to see the sky';
+    c.textContent = `Alt ${Math.round(aa.alt)}\u00b0 \u00b7 Az ${Math.round(aa.az)}\u00b0 ${dir16(aa.az)}`; return;
+  }
   if (mode === 'ar') {
     let best = null, bz = Math.cos(4 * D2R);
-    for (let i = 0; i < NS && SMAG[i] < 3.6; i++) if (SNAME[i] && PZ[i] > bz) { bz = PZ[i]; best = i; }
+    for (let i = 0; i < NS && SMAG[i] < 3.6; i++) if (SNAME[i] && PU[i] > 0 && PZ[i] > bz) { bz = PZ[i]; best = i; }
     let bname = null;
-    for (const b of BODIES) { const z = dot3(b.v, f); if (z > Math.cos(4 * D2R) && z > bz) { bz = z; bname = b.name; } }
+    for (const b of BODIES) { const z = dot3(b.v, f); if (b.alt > 0 && z > Math.cos(4 * D2R) && z > bz) { bz = z; bname = b.name; } }
     k.textContent = bname || best != null ? 'Pointing at' : 'Facing';
     v.textContent = bname || (best != null ? SNAME[best] : (con ? CONS[con].n : DIRWORD[dir16(aa.az)].replace(/^./, m => m.toUpperCase())));
     c.textContent = `Alt ${Math.round(aa.alt)}° · Az ${Math.round(aa.az)}° ${dir16(aa.az)}${(best != null || bname) && con ? ' · ' + CONS[con].n : ''}`;
@@ -1472,8 +1502,9 @@ function onOrient(e) {
   const hd = e.webkitCompassHeading;
   if (typeof hd === 'number' && hd >= 0 && !isNaN(hd)) {
     const off = norm360(360 - hd - a);
-    if (iosOff == null) iosOff = off;
-    else if (Math.abs(b) < 70 && Math.abs(g) < 60) iosOff = norm360(iosOff + angDiff(off, iosOff) * 0.06);
+    const good = Math.abs(Math.abs(b) - 90) > 20 && Math.abs(g) < 50;
+    if (iosOff == null) { iosOff = off; iosGood = good; }
+    else if (good) { iosOff = norm360(iosOff + angDiff(off, iosOff) * (iosGood ? 0.05 : 0.5)); iosGood = true; }
     a += iosOff; oriKind = 'ios';
   } else if (e.type === 'deviceorientationabsolute' || e.absolute === true) oriKind = 'abs';
   else oriKind = 'rel';
@@ -1517,7 +1548,7 @@ async function startLive() {
 }
 function stopLive() {
   if (qC) { const f = basisFromQ(qC).f, aa = altAzOf(f); view.az = aa.az; view.alt = clamp(aa.alt, -20, 90); view.fov = Math.max(view.fov, 60); }
-  mode = 'touch'; detachOrientation();
+  mode = 'touch'; detachOrientation(); $('#calib').classList.remove('on');
   if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; camLive = false; video.classList.remove('on'); video.srcObject = null;
   $('#view-sky').classList.remove('ar'); updateModeBtn(); dirty = true;
 }
@@ -1530,7 +1561,7 @@ function requestGPS(explicit) {
   navigator.geolocation.getCurrentPosition(p => {
     setLocation({ name: 'My location', lat: +p.coords.latitude.toFixed(3), lon: +p.coords.longitude.toFixed(3), src: 'gps' });
     if (explicit) toast('Location updated');
-  }, () => { if (explicit) toast(inFrame ? 'This preview window blocks location. Pick a city or type coordinates.' : 'Location access was refused. Pick a city or type coordinates.', 5000); },
+  }, () => { if (!explicit && mode === 'ar') toast(`Location access was refused, so positions are worked out for ${OBS.name}. Allow location access for the best accuracy.`, 5000); if (explicit) toast(inFrame ? 'This preview window blocks location. Pick a city or type coordinates.' : 'Location access was refused. Pick a city or type coordinates.', 5000); },
     { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 });
 }
 function setLocation(loc) {
@@ -1557,13 +1588,13 @@ function openObjSheet() {
     const i = sel.id, cid = starCon(i), aa = altAzOf(toENU(svec(i))), info = STARINFO[SNAME[i]];
     h = `<h2>${esc(starLabel(i))}</h2><div class="sub">${SNAME[i] && bayerName(i) ? esc(bayerName(i)) + ' · ' : ''}Star${cid ? ' in ' + esc(CONS[cid].n) : ''}</div>` +
       kv([['Brightness', 'mag ' + fmatMag(SMAG[i])], ['Position now', `${Math.round(aa.alt)}° up · ${dir16(aa.az)}`], info ? ['Distance', fmtLy(info.dist)] : ['Colour', colourWord(STARS[i][3])]]) +
-      `<div class="row"><a class="btn primary wide" href="#star-${STARS[i][4]}">Read more</a>${cid ? `<a class="btn wide" href="#con-${cid}">${esc(CONS[cid].n)}</a>` : ''}</div>`;
+      `<div class="row"><a class="btn primary wide" href="#star-${STARS[i][4]}">Read more</a>${cid ? `<a class="btn wide" href="#con-${cid}">${esc(CONS[cid].n)}</a>` : ''}${alignBtn()}</div>`;
   } else if (sel.type === 'body') {
     const b = bodyById(sel.id), inf = BODYINFO[sel.id];
     h = `<h2>${inf.name}</h2><div class="sub">${inf.type}${sel.id === 'moon' ? ' · ' + moonPhaseName(AE.MoonPhase(AE.MakeTime(new Date()))) : ''}</div>` +
       kv([b.mag != null ? ['Brightness', 'mag ' + fmatMag(b.mag)] : null, ['Position now', `${Math.round(b.alt)}° ${b.alt < 0 ? 'below horizon' : 'up'} · ${dir16(b.az)}`], ['Distance', fmtDist(b)]]) +
       (sel.id === 'sun' ? '<p class="note">Never look at the Sun directly or through binoculars.</p>' : '') +
-      `<div class="row"><a class="btn primary wide" href="#planet-${sel.id}">Read more</a></div>`;
+      `<div class="row"><a class="btn primary wide" href="#planet-${sel.id}">Read more</a>${alignBtn()}</div>`;
   } else {
     const cid = sel.id, info = CONINFO[cid];
     h = `<h2>${esc(CONS[cid].n)}</h2><div class="sub">Constellation · ${esc(info ? info.meaning : 'The ' + CON_MEANING[cid])}</div>` +
@@ -1571,7 +1602,28 @@ function openObjSheet() {
       `<div class="row"><a class="btn primary wide" href="#con-${cid}">Read the story</a>${LEVELS.includes(cid) ? `<a class="btn wide" href="#play-${cid}">Trace it</a>` : ''}</div>`;
   }
   $('#objBody').innerHTML = h; $('#setSheet').classList.remove('on'); $('#objSheet').classList.add('on');
+  const ab = $('#alignBtn'); if (ab) ab.addEventListener('click', startAlign);
 }
+/* Compass alignment: centre a known object in the circle, then the app corrects its heading */
+let calibSel = null;
+function alignBtn() { return mode === 'ar' && sel && !(sel.type === 'body' && sel.id === 'sun') ? '<button class="btn wide" id="alignBtn">Align compass</button>' : ''; }
+function startAlign() {
+  calibSel = { ...sel }; closeSheets();
+  $('#calibTxt').textContent = `Move your phone until ${selName()} sits inside the circle in the middle of the screen, hold it steady, then tap the button.`;
+  $('#calib').classList.add('on');
+}
+$('#calibOk').addEventListener('click', () => {
+  $('#calib').classList.remove('on'); if (!calibSel || !P || mode !== 'ar') return;
+  sel = calibSel; const d = selDir(); if (!d) return;
+  let objAz = altAzOf(d).az, objAlt = altAzOf(d).alt;
+  if (sel.type === 'star') objAlt += refraction(objAlt);
+  const cam = altAzOf(P.f), delta = angDiff(objAz, cam.az);
+  S.cmp = Math.round(clamp(S.cmp + delta, -60, 60) * 2) / 2; saveS(); $('#cmpIn').value = S.cmp; $('#cmpV').textContent = (S.cmp > 0 ? '+' : '') + S.cmp + '\u00b0';
+  const tilt = Math.abs(objAlt - cam.alt);
+  toast(Math.abs(delta) < 0.5 ? 'Compass already lined up.' : `Compass corrected by ${delta > 0 ? '+' : ''}${delta.toFixed(1)}\u00b0.${tilt > 4 ? ' Height was off by ' + tilt.toFixed(0) + '\u00b0 too: check the camera field of view in Settings.' : ''}`, 5000);
+  calibSel = null; dirty = true;
+});
+$('#calibNo').addEventListener('click', () => { $('#calib').classList.remove('on'); calibSel = null; });
 const fmatMag = fmtMag;
 function fmtLy(d) { return d < 20 ? d.toFixed(1) + ' light-years' : '~' + Math.round(d).toLocaleString() + ' light-years'; }
 function fmtDist(b) {
